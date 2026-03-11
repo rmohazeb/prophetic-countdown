@@ -1,0 +1,536 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+
+const App = () => {
+  return (
+    <Router>
+      <GlobalStyles />
+      <MainContent />
+    </Router>
+  );
+};
+
+const GlobalStyles = () => (
+  <style>{`
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      color: #ffffff !important;
+      font-family: Arial, sans-serif !important;
+      padding: 1rem !important;
+      font-weight: bold !important;
+      font-style: italic !important;
+    }
+    .nav-bar {
+      display: -ms-flexbox !important;
+      display: flex !important;
+      gap: 0.70rem !important;
+      padding: 0.5rem 0 !important;
+      margin-bottom: 1rem !important;
+    }
+    .nav-link {
+      padding: 0.5rem 1rem !important;
+      border: 0.30rem solid rgba(255, 255, 255, 0.3) !important;
+      border-radius: 4px !important;
+      text-decoration: none !important;
+      color: white !important;
+      background-color: transparent !important;
+      transition: all 0.3s ease !important;
+    }
+    .nav-link.active {
+      border-color: #eab308 !important;
+    }
+    h1, .subheading, .utc-timestamp, .ad-timestamp {
+      font-size: 42px !important;
+      text-align: center !important;
+      margin-bottom: 0.3rem !important;
+    }
+    .subheading {
+      color: #eab308 !important;
+    }
+    .utc-timestamp, .ad-timestamp {
+      color: #eab308 !important;
+    }
+    h2 {
+      font-size: 1.5rem !important;
+      margin: 0.5rem 0 !important;
+      color: #eab308 !important;
+      text-align: left !important;
+    }
+    .scroll-row {
+      display: -ms-flexbox !important;
+      display: flex !important;
+      overflow-x: auto !important;
+      gap: 1rem !important;
+      padding: 0.5rem 0 !important;
+      margin: 0.5rem 0 !important;
+      -ms-flex-wrap: nowrap !important;
+      flex-wrap: nowrap !important;
+      scrollbar-width: thin !important;
+    }
+    .scroll-row::-webkit-scrollbar {
+      height: 6px !important;
+    }
+    .scroll-row::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3) !important;
+      border-radius: 3px !important;
+    }
+    .image-card {
+      width: 280px !important;
+      height: 173px !important;
+      flex-shrink: 0 !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    .image-card img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
+    .pdf-row {
+      display: -ms-flexbox !important;
+      display: flex !important;
+      gap: 1rem !important;
+      padding: 0.5rem 0 !important;
+      margin: 0.5rem 0 !important;
+      -ms-flex-wrap: nowrap !important;
+      flex-wrap: nowrap !important;
+    }
+    .pdf-card {
+      width: 180px !important;
+      height: 80px !important;
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+      border-radius: 8px !important;
+      display: -ms-flexbox !important;
+      display: flex !important;
+      -ms-flex-align: center !important;
+      align-items: center !important;
+      -ms-flex-pack: center !important;
+      justify-content: center !important;
+      text-decoration: none !important;
+      color: white !important;
+      font-weight: bold !important;
+      transition: all 0.3s ease !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    .pdf-card:hover {
+      transform: translateY(-2px) !important;
+      background: linear-gradient(135deg, #3b82f6, #1e3a8a) !important;
+    }
+    .countdown-row {
+      display: -ms-flexbox !important;
+      display: flex !important;
+      justify-content: center !important;
+      gap: 0.5rem !important;
+      margin: 0.5rem 0 !important;
+      -ms-flex-wrap: nowrap !important;
+      flex-wrap: nowrap !important;
+    }
+    .countdown-unit {
+      width: 120px !important;
+      height: 100px !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      border-radius: 12px !important;
+      display: -ms-flexbox !important;
+      display: flex !important;
+      -ms-flex-direction: column !important;
+      flex-direction: column !important;
+      -ms-flex-align: center !important;
+      align-items: center !important;
+      -ms-flex-pack: center !important;
+      justify-content: center !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    }
+    .countdown-value {
+      font-size: 48px !important;
+      font-weight: bold !important;
+      font-style: italic !important;
+      color: white !important;
+    }
+    .countdown-label {
+      font-size: 0.8rem !important;
+      color: rgba(255, 255, 255, 0.7) !important;
+      text-transform: uppercase !important;
+      letter-spacing: 1px !important;
+    }
+    .sound-toggle {
+      width: 120px !important;
+      height: 100px !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      border-radius: 50% !important;
+      display: -ms-flexbox !important;
+      display: flex !important;
+      -ms-flex-direction: column !important;
+      flex-direction: column !important;
+      -ms-flex-align: center !important;
+      align-items: center !important;
+      -ms-flex-pack: center !important;
+      justify-content: center !important;
+      border: 2px solid #eab308 !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+      cursor: pointer !important;
+      transition: all 0.3s ease !important;
+    }
+    .sound-toggle:hover {
+      background: rgba(234, 179, 8, 0.2) !important;
+    }
+    .sound-label {
+      font-size: 1rem !important;
+      font-weight: bold !important;
+      color: #eab308 !important;
+      text-align: center !important;
+    }
+    .fulfilled-container {
+      display: -ms-flexbox !important;
+      display: flex !important;
+      justify-content: center !important;
+      gap: 0.5rem !important;
+      margin: 0.5rem 0 !important;
+    }
+    .fulfilled-text {
+      width: 340px !important;
+      height: 120px !important;
+      background: linear-gradient(45deg, #22c55e, #16a34a) !important;
+      border-radius: 12px !important;
+      display: -ms-flexbox !important;
+      display: flex !important;
+      -ms-flex-align: center !important;
+      align-items: center !important;
+      -ms-flex-pack: center !important;
+      justify-content: center !important;
+      font-size: 42px !important;
+      font-weight: bold !important;
+      font-style: italic !important;
+      color: white !important;
+      text-align: center !important;
+    }
+    .checkmark-container {
+      width: 110px !important;
+      height: 120px !important;
+      background: linear-gradient(45deg, #22c55e, #16a34a) !important;
+      border-radius: 12px !important;
+      display: -ms-flexbox !important;
+      display: flex !important;
+      -ms-flex-align: center !important;
+      align-items: center !important;
+      -ms-flex-pack: center !important;
+      justify-content: center !important;
+      font-size: 48px !important;
+      font-weight: bold !important;
+      color: white !important;
+    }
+  `}</style>
+);
+
+const MainContent = () => {
+  const location = useLocation();
+  const [isSoundEnabled, setIsSoundEnabled] = useState(false);
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
+  const audioRef = useRef(null);
+
+  // Initialize audio
+  useEffect(() => {
+    audioRef.current = new Audio('/tick_tock_sound2.mp3');
+    audioRef.current.preload = 'auto';
+  }, []);
+
+  // Handle user interaction to unlock audio
+  const handleSoundToggle = () => {
+    if (!isAudioUnlocked) {
+      audioRef.current.play().then(() => {
+        setIsAudioUnlocked(true);
+        setIsSoundEnabled(true);
+      }).catch(() => {
+        setIsAudioUnlocked(true);
+        setIsSoundEnabled(!isSoundEnabled);
+      });
+    } else {
+      setIsSoundEnabled(!isSoundEnabled);
+    }
+  };
+
+  const getBackgroundColor = () => {
+    switch (location.pathname) {
+      case '/smoke': return '#7f2b0d';
+      case '/gog': return '#1e3a8a';
+      case '/end': return '#7f1d1d';
+      case '/moon': return '#374151';
+      case '/code': return '#4b5563';
+      case '/messenger': return '#57534e';
+      case '/computer': return '#5b21b6';
+      default: return '#0a0a2d';
+    }
+  };
+
+  const isActivePage = (path) => location.pathname === path;
+
+  return (
+    <>
+      <div style={{ backgroundColor: getBackgroundColor(), minHeight: '100vh' }}>
+        <nav className="nav-bar">
+          <Link to="/" className={`nav-link ${isActivePage('/') ? 'active' : ''}`}>Homepage</Link>
+          <Link to="/smoke" className={`nav-link ${isActivePage('/smoke') ? 'active' : ''}`}>The Day Of Smoke</Link>
+          <Link to="/gog" className={`nav-link ${isActivePage('/gog') ? 'active' : ''}`}>Gog & Magog</Link>
+          <Link to="/end" className={`nav-link ${isActivePage('/end') ? 'active' : ''}`}>The End Of The World</Link>
+          <Link to="/moon" className={`nav-link ${isActivePage('/moon') ? 'active' : ''}`}>The Splitting of The Moon</Link>
+          <Link to="/code" className={`nav-link ${isActivePage('/code') ? 'active' : ''}`}>Quran's 19-Based Mathematical Code</Link>
+          <Link to="/messenger" className={`nav-link ${isActivePage('/messenger') ? 'active' : ''}`}>God's Messenger Of The Covenant</Link>
+          <Link to="/computer" className={`nav-link ${isActivePage('/computer') ? 'active' : ''}`}>Computer, The Creature</Link>
+        </nav>
+
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/smoke" element={<SmokePage isSoundEnabled={isSoundEnabled} handleSoundToggle={handleSoundToggle} audioRef={audioRef} />} />
+          <Route path="/gog" element={<GogPage isSoundEnabled={isSoundEnabled} handleSoundToggle={handleSoundToggle} audioRef={audioRef} />} />
+          <Route path="/end" element={<EndPage isSoundEnabled={isSoundEnabled} handleSoundToggle={handleSoundToggle} audioRef={audioRef} />} />
+          <Route path="/moon" element={<MoonPage />} />
+          <Route path="/code" element={<CodePage />} />
+          <Route path="/messenger" element={<MessengerPage />} />
+          <Route path="/computer" element={<ComputerPage />} />
+        </Routes>
+      </div>
+    </>
+  );
+};
+
+const HomePage = () => {
+  return (
+    <>
+      <h1>Prophetic Countdown</h1>
+      <div className="subheading">Are You Ready? Time Is Running Out!</div>
+      <div className="scroll-row">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="image-card">
+            <img src={`/final_testament${i}.jpg`} alt={`Final Testament ${i}`} />
+          </div>
+        ))}
+      </div>
+      <h2>Signs & Proofs</h2>
+      <div className="pdf-row">
+        <a href={`/intro_to_prophetic_countdown1.pdf`} target="_blank" rel="noopener noreferrer" className="pdf-card">
+          Document 1
+        </a>
+      </div>
+    </>
+  );
+};
+
+const CountdownTimer = ({ targetDate, isSoundEnabled, handleSoundToggle, audioRef }) => {
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(targetDate));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const newTimeLeft = calculateTimeLeft(targetDate);
+      setTimeLeft(newTimeLeft);
+      
+      if (isSoundEnabled && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(e => console.log('Audio play error:', e));
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [targetDate, isSoundEnabled]);
+
+  const units = [
+    { label: 'Years', value: timeLeft.years },
+    { label: 'Days', value: timeLeft.days },
+    { label: 'Hours', value: timeLeft.hours },
+    { label: 'Minutes', value: timeLeft.minutes },
+    { label: 'Seconds', value: timeLeft.seconds }
+  ];
+
+  return (
+    <div className="countdown-row">
+      {units.map((unit, index) => (
+        <div key={index} className="countdown-unit">
+          <div className="countdown-value">{unit.value}</div>
+          <div className="countdown-label">{unit.label}</div>
+        </div>
+      ))}
+      <div className="sound-toggle" onClick={handleSoundToggle}>
+        <div className="sound-label">{isSoundEnabled ? 'Sound OFF' : 'Sound ON'}</div>
+      </div>
+    </div>
+  );
+};
+
+const calculateTimeLeft = (targetDate) => {
+  const now = new Date().getTime();
+  const target = new Date(targetDate).getTime();
+  const difference = target - now;
+
+  if (difference <= 0) {
+    return {
+      years: 0,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0
+    };
+  }
+
+  const years = Math.floor(difference / (1000 * 60 * 60 * 24 * 365));
+  const days = Math.floor((difference % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+  return {
+    years,
+    days,
+    hours,
+    minutes,
+    seconds
+  };
+};
+
+const FulfilledDisplay = () => (
+  <div className="fulfilled-container">
+    <div className="fulfilled-text">FULFILLED</div>
+    <div className="checkmark-container">✓</div>
+  </div>
+);
+
+const ProphecyPage = ({ 
+  title, 
+  timestamp, 
+  imageUrlBase, 
+  pdfUrlBase, 
+  targetDate, 
+  isFuture,
+  isSoundEnabled,
+  handleSoundToggle,
+  audioRef
+}) => {
+  const pdfCount = isFuture ? 3 : 1;
+  
+  return (
+    <>
+      <h1>{title}</h1>
+      <div className={isFuture ? "utc-timestamp" : "ad-timestamp"}>{timestamp}</div>
+      <div className="scroll-row">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="image-card">
+            <img src={`/${imageUrlBase}${i}.jpg`} alt={`${title} ${i}`} />
+          </div>
+        ))}
+      </div>
+      {isFuture ? (
+        <CountdownTimer 
+          targetDate={targetDate} 
+          isSoundEnabled={isSoundEnabled}
+          handleSoundToggle={handleSoundToggle}
+          audioRef={audioRef}
+        />
+      ) : (
+        <FulfilledDisplay />
+      )}
+      <h2>Signs & Proofs</h2>
+      <div className="pdf-row">
+        {[...Array(pdfCount)].map((_, i) => (
+          <a key={i+1} href={`/${pdfUrlBase}${i+1}.pdf`} target="_blank" rel="noopener noreferrer" className="pdf-card">
+            Document {i+1}
+          </a>
+        ))}
+      </div>
+    </>
+  );
+};
+
+const SmokePage = ({ isSoundEnabled, handleSoundToggle, audioRef }) => (
+  <ProphecyPage
+    title="The Day Of Smoke (44:10-16)"
+    timestamp="UTC 2220-06-16 21:00:00 TO 2221-04-08 04:00:00"
+    imageUrlBase="smoke_day"
+    pdfUrlBase="the_day_of_smoke"
+    targetDate="2220-06-16T21:00:00Z"
+    isFuture={true}
+    isSoundEnabled={isSoundEnabled}
+    handleSoundToggle={handleSoundToggle}
+    audioRef={audioRef}
+  />
+);
+
+const GogPage = ({ isSoundEnabled, handleSoundToggle, audioRef }) => (
+  <ProphecyPage
+    title="Gog & Magog (18:94-102, 21:96-97)"
+    timestamp="UTC 2270-12-23 14:00:00 TO 2271-01-11 14:00:00"
+    imageUrlBase="star_wars"
+    pdfUrlBase="gog_magog"
+    targetDate="2270-12-23T14:00:00Z"
+    isFuture={true}
+    isSoundEnabled={isSoundEnabled}
+    handleSoundToggle={handleSoundToggle}
+    audioRef={audioRef}
+  />
+);
+
+const EndPage = ({ isSoundEnabled, handleSoundToggle, audioRef }) => (
+  <ProphecyPage
+    title="The End Of The World, Resurrection Day (39:68-69)"
+    timestamp="UTC 2280-11-27 01:00:00 TO 2280-12-09 17:00:00"
+    imageUrlBase="earth_quake"
+    pdfUrlBase="the_first_the_second_blow"
+    targetDate="2280-11-27T01:00:00Z"
+    isFuture={true}
+    isSoundEnabled={isSoundEnabled}
+    handleSoundToggle={handleSoundToggle}
+    audioRef={audioRef}
+  />
+);
+
+const MoonPage = () => (
+  <ProphecyPage
+    title="The Splitting of The Moon (54:1)"
+    timestamp="UTC 1969-07-21 01:54:00"
+    imageUrlBase="Moon_split"
+    pdfUrlBase="moon_split_fulfilled"
+    targetDate=""
+    isFuture={false}
+  />
+);
+
+const CodePage = () => (
+  <ProphecyPage
+    title="Quran's 19-Based Mathematical Code (74:30-35)"
+    timestamp="AD 1974"
+    imageUrlBase="Quran19Based"
+    pdfUrlBase="quran19_Based_Details"
+    targetDate=""
+    isFuture={false}
+  />
+);
+
+const MessengerPage = () => (
+  <ProphecyPage
+    title="God's Messenger Of The Covenant (3:81, 33:7)"
+    timestamp="AD 1972-01-21"
+    imageUrlBase="Messenger"
+    pdfUrlBase="messenger_details"
+    targetDate=""
+    isFuture={false}
+  />
+);
+
+const ComputerPage = () => (
+  <ProphecyPage
+    title="Computer, The Creature (27:82)"
+    timestamp="AD 1824 & 1947"
+    imageUrlBase="ComputerTheCreature"
+    pdfUrlBase="computer_the_creature_details"
+    targetDate=""
+    isFuture={false}
+  />
+);
+
+export default App;
