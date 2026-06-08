@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/prophetic-countdown/static/css/main.e6c13ad2.css",
-    "main.js": "/prophetic-countdown/static/js/main.6e768ff2.js",
+    "main.js": "/prophetic-countdown/static/js/main.95524154.js",
     "static/js/453.0e4e6036.chunk.js": "/prophetic-countdown/static/js/453.0e4e6036.chunk.js",
     "index.html": "/prophetic-countdown/index.html",
     "main.e6c13ad2.css.map": "/prophetic-countdown/static/css/main.e6c13ad2.css.map",
-    "main.6e768ff2.js.map": "/prophetic-countdown/static/js/main.6e768ff2.js.map",
+    "main.95524154.js.map": "/prophetic-countdown/static/js/main.95524154.js.map",
     "453.0e4e6036.chunk.js.map": "/prophetic-countdown/static/js/453.0e4e6036.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.6e768ff2.js"
+    "static/js/main.95524154.js"
   ]
 }
