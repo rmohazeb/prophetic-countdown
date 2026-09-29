@@ -1,0 +1,1800 @@
+
+/*
+ * ============================================================
+ * PROPHETIC COUNTDOWN — Single-File React Application
+ * ============================================================
+ * SETUP (for Create React App):
+ *   npx create-react-app prophetic-countdown
+ *   cd prophetic-countdown
+ *   npm install react-router-dom@6
+ *   Replace src/App.js with this file
+ *   npm start
+ *
+ * For GitHub Pages: add "homepage" to package.json, run npm run build,
+ * deploy the /build folder. No other changes needed.
+ * ============================================================
+ */
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { HashRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+
+// ============================================================
+// ASSET PATH HELPER — Uses Vite's import.meta.env.BASE_URL
+// ============================================================
+const getAssetPath = (filename: string): string => {
+  const base = import.meta.env.BASE_URL || '';
+  return `${base}/${filename.toLowerCase()}`;
+};
+
+// ============================================================
+// ROUTE DATA — navLabel for navigation, pageTitle for page h1
+// ============================================================
+interface RouteData {
+  path: string;
+  navLabel: string;
+  pageTitle: string;
+  bgColor: string;
+  images: string[];
+  pdfs: { filename: string; label: string }[];
+  isFulfilled: boolean;
+  targetDate?: Date;
+  timestamp?: string;
+  fulfilledDate?: string;
+}
+
+const routeData: RouteData[] = [
+  {
+    path: '/',
+    navLabel: 'Home',
+    pageTitle: 'Prophetic Countdown',
+    bgColor: '#0f172a',
+    images: ['final_testament1.jpg', 'final_testament2.jpg', 'final_testament3.jpg', 'final_testament4.jpg'],
+    pdfs: [
+      { filename: 'intro_to_prophetic_countdown1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'intro_to_prophetic_countdown1.pdf', label: 'Signs & Proofs 2' },
+      { filename: 'intro_to_prophetic_countdown1.pdf', label: 'Signs & Proofs 3' },
+    ],
+    isFulfilled: false,
+  },
+  {
+    path: '/resurrection',
+    navLabel: 'Resurrection Day',
+    pageTitle: 'Resurrection Day (This Is The End!)',
+    bgColor: '#1a0a0a',
+    images: ['earth_quake1.jpg', 'earth_quake2.jpg', 'earth_quake3.jpg', 'earth_quake4.jpg'],
+    pdfs: [
+      { filename: 'the_first_the_second_blow1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'the_first_the_second_blow2.pdf', label: 'Signs & Proofs 2' },
+    ],
+    isFulfilled: false,
+    targetDate: new Date('2280-11-27T01:00:00Z'),
+    timestamp: 'UTC Saturday 2280-11-27 01:00:00 \u2192 Thursday 2280-12-09 17:00:00',
+  },
+  {
+    path: '/gog-magog',
+    navLabel: 'Gog & Magog',
+    pageTitle: 'Gog & Magog (10 Years Before The End)',
+    bgColor: '#0a0a1a',
+    images: ['star_wars1.jpg', 'star_wars2.jpg', 'star_wars3.jpg', 'star_wars4.jpg'],
+    pdfs: [
+      { filename: 'gog_magog1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'gog_magog2.pdf', label: 'Signs & Proofs 2' },
+    ],
+    isFulfilled: false,
+    targetDate: new Date('2270-12-23T14:00:00Z'),
+    timestamp: 'UTC Friday 2270-12-23 14:00:00 \u2192 Wednesday 2271-01-11 14:00:00',
+  },
+  {
+    path: '/day-of-smoke',
+    navLabel: 'The Day Of Smoke',
+    pageTitle: 'The Day Of Smoke (60 Years Before The End)',
+    bgColor: '#1a1000',
+    images: ['smoke_day1.jpg', 'smoke_day2.jpg', 'smoke_day3.jpg', 'smoke_day4.jpg'],
+    pdfs: [
+      { filename: 'the_day_of_smoke1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'the_day_of_smoke2.pdf', label: 'Signs & Proofs 2' },
+      { filename: 'the_day_of_smoke3.pdf', label: 'Signs & Proofs 3' },
+    ],
+    isFulfilled: false,
+    targetDate: new Date('2220-06-16T21:00:00Z'),
+    timestamp: 'UTC Friday 2220-06-16 21:00:00 \u2192 Sunday 2221-04-08 04:00:00',
+  },
+  {
+    path: '/computer',
+    navLabel: 'Computer, The Creature',
+    pageTitle: 'Computer, The Creature',
+    bgColor: '#001a0a',
+    images: ['computerthecreature1.jpg', 'computerthecreature2.jpg', 'computerthecreature3.jpg', 'computerthecreature4.jpg'],
+    pdfs: [
+      { filename: 'computer_the_creature_details1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1824 & 1947',
+  },
+  {
+    path: '/moon',
+    navLabel: 'Splitting of The Moon',
+    pageTitle: 'Splitting of The Moon (Apollo 11 Mission)',
+    bgColor: '#000a1a',
+    images: ['moon_split1.jpg', 'moon_split2.jpg', 'moon_split3.jpg', 'moon_split4.jpg'],
+    pdfs: [
+      { filename: 'moon_split_fulfilled1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1969-07-21 UTC17:54 / 13:54 / 1:54 PM EDT, See Quran 54:1',
+  },
+  {
+    path: '/messenger',
+    navLabel: 'Messenger of The Covenant',
+    pageTitle: 'Messenger of The Covenant',
+    bgColor: '#0a1a1a',
+    images: ['messenger1.jpg', 'messenger2.jpg', 'messenger3.jpg', 'messenger4.jpg'],
+    pdfs: [
+      { filename: 'messenger_details1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1972-01-21',
+  },
+  {
+    path: '/quran-19',
+    navLabel: "Quran's 19-Based Code",
+    pageTitle: "Quran's 19-Based Code",
+    bgColor: '#100a1a',
+    images: ['quran19based1.jpg', 'quran19based2.jpg', 'quran19based3.jpg', 'quran19based4.jpg'],
+    pdfs: [
+      { filename: 'quran19_based_details1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1974',
+  },
+];
+
+// ============================================================
+// EMBEDDED CSS — All styles in one <style> tag
+// ============================================================
+const globalStyles = `
+  * {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  body, html, #root {
+    width: 100% !important;
+    min-height: 100vh !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+  }
+
+  .app-container {
+    min-height: 100vh !important;
+    width: 100% !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-direction: column !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 1rem !important;
+  }
+
+  /* Navigation */
+  .nav-container {
+    width: 100% !important;
+    max-width: 1200px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    gap: 0.50rem !important;
+    padding: 1rem 0 !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .nav-link {
+    display: -ms-inline-flexbox !important;
+    display: inline-flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    padding: 0.5rem 0.75rem !important;
+    border: 0.15rem solid rgba(255,255,255,0.3) !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: rgba(255,255,255,0.6) !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    font-size: 0.85rem !important;
+    transition: all 0.3s ease !important;
+    text-align: center !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+  }
+
+  .nav-link:hover {
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.6) !important;
+  }
+
+  .nav-link.active {
+    border: 0.30rem solid #eab308 !important;
+    background: transparent !important;
+    color: #ffffff !important;
+  }
+
+  /* Page Title */
+  .page-title {
+    font-size: 42px !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+    margin-bottom: 1rem !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    max-width: 1120px !important;
+  }
+
+  /* Subheading - Yellow */
+  .subheading-yellow {
+    font-size: 42px !important;
+    color: #eab308 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 1rem auto !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0 1rem !important;
+  }
+
+  /* Subheading - Blue (email) */
+  .subheading-blue {
+    font-size: 42px !important;
+    color: #3b82f6 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0 1rem !important;
+  }
+
+  @media (max-width: 1120px) {
+    .subheading-yellow,
+    .subheading-blue {
+      font-size: 32px !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .subheading-yellow,
+    .subheading-blue {
+      font-size: 24px !important;
+    }
+  }
+
+  /* UTC Timestamp */
+  .utc-timestamp {
+    font-size: 32px !important;
+    color: #eab308 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 1.5rem auto !important;
+    white-space: nowrap !important;
+    overflow-x: auto !important;
+    padding: 0 1rem !important;
+  }
+
+  @media (max-width: 1023px) and (min-width: 768px) {
+    .utc-timestamp {
+      font-size: 28px !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .utc-timestamp {
+      font-size: 20px !important;
+    }
+  }
+
+  /* Image Grid */
+  .image-grid {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .image-grid img {
+    width: 260px !important;
+    height: 185px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    border: 2px solid rgba(255,255,255,0.2) !important;
+    max-width: 100% !important;
+  }
+
+  /* Section Headings */
+  .section-heading {
+    text-align: left !important;
+    font-size: 28px !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    width: 100% !important;
+    margin: 1.5rem auto 1rem auto !important;
+    padding: 0 0.5rem !important;
+  }
+
+  /* PDF Cards */
+  .pdf-cards {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .pdf-card {
+    width: 180px !important;
+    height: 80px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: rgba(255,255,255,0.1) !important;
+    border: 2px solid rgba(255,255,255,0.3) !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    font-size: 0.9rem !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0.5rem !important;
+  }
+
+  .pdf-card:hover {
+    background: rgba(255,255,255,0.25) !important;
+    border-color: #eab308 !important;
+    transform: scale(1.05) !important;
+  }
+
+  /* Countdown Container */
+  .countdown-row {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .countdown-unit {
+    min-width: 120px !important;
+    padding: 1rem !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-direction: column !important;
+    flex-direction: column !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 12px !important;
+  }
+
+  .countdown-digit {
+    font-size: 48px !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+    line-height: 1 !important;
+  }
+
+  .countdown-label {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: rgba(255,255,255,0.7) !important;
+    margin-top: 0.5rem !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Fulfilled Container */
+  .fulfilled-container {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .fulfilled-box {
+    width: 340px !important;
+    height: 120px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: linear-gradient(45deg, #22c55e, #16a34a) !important;
+    border-radius: 12px !important;
+  }
+
+  .fulfilled-text {
+    font-size: 42px !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+  }
+
+  .fulfilled-check {
+    width: 110px !important;
+    height: 120px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: linear-gradient(45deg, #22c55e, #16a34a) !important;
+    border-radius: 12px !important;
+    font-size: 48px !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+  }
+
+  /* Sound Toggle Button — Pill shape, action-oriented label */
+  .snd-btn {
+    width: 140px !important;
+    height: 50px !important;
+    border-radius: 25px !important;
+    display: -ms-inline-flexbox !important;
+    display: inline-flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: rgba(255,255,255,0.15) !important;
+    border: 2px solid rgba(255,255,255,0.4) !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    font-size: 0.75rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    text-align: center !important;
+    padding: 0.25rem 0.5rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .snd-btn:hover {
+    background: rgba(255,255,255,0.25) !important;
+    border-color: #eab308 !important;
+  }
+
+  /* Fulfilled date text */
+  .fulfilled-date {
+    font-size: 24px !important;
+    color: #eab308 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 1.5rem auto !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0 1rem !important;
+  }
+
+  @media (max-width: 768px) {
+    .page-title {
+      font-size: 28px !important;
+    }
+    .countdown-unit {
+      min-width: 90px !important;
+      padding: 0.75rem !important;
+    }
+    .countdown-digit {
+      font-size: 32px !important;
+    }
+    .fulfilled-box {
+      width: 280px !important;
+      height: 100px !important;
+    }
+    .fulfilled-text {
+      font-size: 32px !important;
+    }
+    .fulfilled-check {
+      width: 90px !important;
+      height: 100px !important;
+      font-size: 36px !important;
+    }
+    .image-grid img {
+      width: 220px !important;
+      height: 155px !important;
+    }
+  }
+`;
+
+// ============================================================
+// COUNTDOWN COMPONENT — PURE DISPLAY, no buttons
+// ============================================================
+interface CountdownProps {
+  targetDate: Date;
+}
+
+function Countdown({ targetDate }: CountdownProps) {
+  const [timeLeft, setTimeLeft] = useState({ years: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculate = () => {
+      const now = new Date().getTime();
+      const target = targetDate.getTime();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setTimeLeft({ years: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+      const days = Math.floor((diff % (1000 * 60 * 60 * 24 * 365.25)) / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft({ years, days, hours, minutes, seconds });
+    };
+
+    calculate();
+    const interval = setInterval(calculate, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return (
+    <>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.years}</span>
+        <span className="countdown-label">Years</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.days}</span>
+        <span className="countdown-label">Days</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.hours}</span>
+        <span className="countdown-label">Hours</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.minutes}</span>
+        <span className="countdown-label">Minutes</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.seconds}</span>
+        <span className="countdown-label">Seconds</span>
+      </div>
+    </>
+  );
+}
+
+// ============================================================
+// FULFILLED COMPONENT
+// ============================================================
+function Fulfilled() {
+  return (
+    <div className="fulfilled-container">
+      <div className="fulfilled-box">
+        <span className="fulfilled-text">FULFILLED</span>
+      </div>
+      <div className="fulfilled-check">
+        <span>&#10003;</span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PROPHECY PAGE COMPONENT
+// ============================================================
+interface ProphecyPageProps {
+  route: RouteData;
+  soundEnabled: boolean;
+  audioUnlocked: boolean;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  onToggleSound: () => void;
+}
+
+function ProphecyPage({ route, soundEnabled, audioUnlocked, audioRef, onToggleSound }: ProphecyPageProps) {
+  // Audio playback inside interval for future prophecies
+  useEffect(() => {
+    if (route.isFulfilled) return;
+
+    const interval = setInterval(() => {
+      if (soundEnabled === true && audioUnlocked === true && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [route.isFulfilled, soundEnabled, audioUnlocked, audioRef]);
+
+  return (
+    <div>
+      <h1 className="page-title">{route.pageTitle}</h1>
+
+      {/* UTC Timestamp for future prophecies */}
+      {route.timestamp && (
+        <div className="utc-timestamp">{route.timestamp}</div>
+      )}
+
+      {/* Fulfilled date for past prophecies */}
+      {route.isFulfilled && route.fulfilledDate && (
+        <div className="fulfilled-date">{route.fulfilledDate}</div>
+      )}
+
+      {/* Countdown or Fulfilled */}
+      {!route.isFulfilled && route.targetDate ? (
+        <div className="countdown-row">
+          <Countdown targetDate={route.targetDate} />
+          {/* Sound toggle — FINAL element in countdown row, rendered EXACTLY ONCE per future prophecy page */}
+          <button className="snd-btn" onClick={onToggleSound}>
+            {soundEnabled ? 'Turn Sound OFF' : 'Turn Sound ON'}
+          </button>
+        </div>
+      ) : (
+        <>
+          <Fulfilled />
+        </>
+      )}
+
+      {/* Imagery Section */}
+      <h2 className="section-heading">Imagery</h2>
+      <div className="image-grid">
+        {route.images.map((img, idx) => (
+          <img
+            key={idx}
+            src={getAssetPath(img)}
+            alt={`${route.navLabel} image ${idx + 1}`}
+            loading="lazy"
+          />
+        ))}
+      </div>
+
+      {/* Signs & Proofs Section */}
+      <h2 className="section-heading">Signs &amp; Proofs</h2>
+      <div className="pdf-cards">
+        {route.pdfs.map((pdf, idx) => (
+          <a
+            key={idx}
+            href={getAssetPath(pdf.filename)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pdf-card"
+          >
+            {pdf.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// HOMEPAGE COMPONENT
+// ============================================================
+function HomePage() {
+  const homeRoute = routeData[0];
+
+  return (
+    <div>
+      <h1 className="page-title">{homeRoute.pageTitle}</h1>
+      <div className="subheading-yellow">Are You Ready? Time Is Running Out!</div>
+      <div className="subheading-blue">Comments? Use:: AmazingQuran19@gmail.com</div>
+
+      {/* Imagery Section */}
+      <h2 className="section-heading">Imagery</h2>
+      <div className="image-grid">
+        {homeRoute.images.map((img, idx) => (
+          <img
+            key={idx}
+            src={getAssetPath(img)}
+            alt={`Homepage image ${idx + 1}`}
+            loading="lazy"
+          />
+        ))}
+      </div>
+
+      {/* Signs & Proofs Section */}
+      <h2 className="section-heading">Signs &amp; Proofs</h2>
+      <div className="pdf-cards">
+        {homeRoute.pdfs.map((pdf, idx) => (
+          <a
+            key={idx}
+            href={getAssetPath(pdf.filename)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pdf-card"
+          >
+            {pdf.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP COMPONENT
+// ============================================================
+function AppContent() {
+  const location = useLocation();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+
+  // Determine active route background color
+  const activeRoute = routeData.find(r => r.path === location.pathname) || routeData[0];
+  const activeRouteColor = activeRoute.bgColor;
+
+  // Audio unlock on first click (one-time)
+  useEffect(() => {
+    const handleFirstClick = () => {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => {
+          audioRef.current.pause();
+          setAudioUnlocked(true);
+        }).catch(() => {});
+      }
+      document.removeEventListener('click', handleFirstClick);
+    };
+    document.addEventListener('click', handleFirstClick);
+    return () => document.removeEventListener('click', handleFirstClick);
+  }, []);
+
+  const toggleSound = useCallback(() => {
+    setSoundEnabled(prev => !prev);
+  }, []);
+
+  return (
+    <div className="app-container" style={{ backgroundColor: activeRouteColor }}>
+      <style>{globalStyles}</style>
+
+      {/* Audio element — preload auto */}
+      <audio ref={audioRef} preload="auto" src={getAssetPath('tick_tock_sound2.mp3')} />
+
+      {/* Navigation — 8 bordered links */}
+      <nav className="nav-container">
+        {routeData.map((route) => (
+          <NavLink
+            key={route.path}
+            to={route.path}
+            end={route.path === '/'}
+            className={({ isActive }) =>
+              `nav-link${isActive ? ' active' : ''}`
+            }
+          >
+            {route.navLabel}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Routes */}
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/resurrection" element={
+          <ProphecyPage
+            route={routeData[1]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/gog-magog" element={
+          <ProphecyPage
+            route={routeData[2]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/day-of-smoke" element={
+          <ProphecyPage
+            route={routeData[3]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/computer" element={
+          <ProphecyPage
+            route={routeData[4]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/moon" element={
+          <ProphecyPage
+            route={routeData[5]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/messenger" element={
+          <ProphecyPage
+            route={routeData[6]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/quran-19" element={
+          <ProphecyPage
+            route={routeData[7]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+      </Routes>
+    </div>
+  );
+}
+
+// ============================================================
+// APP — Wrapped in HashRouter
+// ============================================================
+function App() {
+  return (
+    <HashRouter>
+      <AppContent />
+    </HashRouter>
+  );
+}
+
+export default App;
+
+
+
+// @ts-nocheck
+/*
+ * ============================================================
+ * PROPHETIC COUNTDOWN — Single-File React Application (App.js)
+ * ============================================================
+ * SETUP (for Create React App):
+ *   npx create-react-app prophetic-countdown
+ *   cd prophetic-countdown
+ *   npm install react-router-dom@6
+ *   Replace src/App.js with this file
+ *   npm start
+ *
+ * For GitHub Pages: add "homepage" to package.json, run npm run build,
+ * deploy the /build folder. No other changes needed.
+ * ============================================================
+ */
+
+//import React, { useState, useEffect, useRef, useCallback } from 'react';
+//import { HashRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+
+// ============================================================
+// ASSET PATH HELPER — Uses process.env.PUBLIC_URL (CRA compatible)
+// ============================================================
+const getAssetPath = (filename) => {
+  const base = (typeof process !== 'undefined' && process.env && process.env.PUBLIC_URL)
+    ? process.env.PUBLIC_URL
+    : '';
+  return `${base}/${filename.toLowerCase()}`;
+};
+
+// ============================================================
+// ROUTE DATA — navLabel for navigation, pageTitle for page h1
+// ============================================================
+const routeData = [
+  {
+    path: '/',
+    navLabel: 'Home',
+    pageTitle: 'Prophetic Countdown',
+    bgColor: '#0f172a',
+    images: ['final_testament1.jpg', 'final_testament2.jpg', 'final_testament3.jpg', 'final_testament4.jpg'],
+    pdfs: [
+      { filename: 'intro_to_prophetic_countdown1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'intro_to_prophetic_countdown1.pdf', label: 'Signs & Proofs 2' },
+      { filename: 'intro_to_prophetic_countdown1.pdf', label: 'Signs & Proofs 3' },
+    ],
+    isFulfilled: false,
+  },
+  {
+    path: '/resurrection',
+    navLabel: 'Resurrection Day',
+    pageTitle: 'Resurrection Day (This Is The End!)',
+    bgColor: '#1a0a0a',
+    images: ['earth_quake1.jpg', 'earth_quake2.jpg', 'earth_quake3.jpg', 'earth_quake4.jpg'],
+    pdfs: [
+      { filename: 'the_first_the_second_blow1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'the_first_the_second_blow2.pdf', label: 'Signs & Proofs 2' },
+    ],
+    isFulfilled: false,
+    targetDate: new Date('2280-11-27T01:00:00Z'),
+    timestamp: 'UTC Saturday 2280-11-27 01:00:00 \u2192 Thursday 2280-12-09 17:00:00',
+  },
+  {
+    path: '/gog-magog',
+    navLabel: 'Gog & Magog',
+    pageTitle: 'Gog & Magog (10 Years Before The End)',
+    bgColor: '#0a0a1a',
+    images: ['star_wars1.jpg', 'star_wars2.jpg', 'star_wars3.jpg', 'star_wars4.jpg'],
+    pdfs: [
+      { filename: 'gog_magog1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'gog_magog2.pdf', label: 'Signs & Proofs 2' },
+    ],
+    isFulfilled: false,
+    targetDate: new Date('2270-12-23T14:00:00Z'),
+    timestamp: 'UTC Friday 2270-12-23 14:00:00 \u2192 Wednesday 2271-01-11 14:00:00',
+  },
+  {
+    path: '/day-of-smoke',
+    navLabel: 'The Day Of Smoke',
+    pageTitle: 'The Day Of Smoke (60 Years Before The End)',
+    bgColor: '#1a1000',
+    images: ['smoke_day1.jpg', 'smoke_day2.jpg', 'smoke_day3.jpg', 'smoke_day4.jpg'],
+    pdfs: [
+      { filename: 'the_day_of_smoke1.pdf', label: 'Signs & Proofs 1' },
+      { filename: 'the_day_of_smoke2.pdf', label: 'Signs & Proofs 2' },
+      { filename: 'the_day_of_smoke3.pdf', label: 'Signs & Proofs 3' },
+    ],
+    isFulfilled: false,
+    targetDate: new Date('2220-04-15T10:00:00Z'),
+    timestamp: 'UTC Tuesday 2220-04-15 10:00:00 \u2192 Friday 2220-05-15 10:00:00',
+  },
+  {
+    path: '/computer',
+    navLabel: 'Computer, The Creature',
+    pageTitle: 'Computer, The Creature',
+    bgColor: '#001a0a',
+    images: ['computerthecreature1.jpg', 'computerthecreature2.jpg', 'computerthecreature3.jpg', 'computerthecreature4.jpg'],
+    pdfs: [
+      { filename: 'computer_the_creature_details1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1824 & 1947',
+  },
+  {
+    path: '/moon',
+    navLabel: 'Splitting of The Moon',
+    pageTitle: 'Splitting of The Moon (Apollo 11 Mission)',
+    bgColor: '#000a1a',
+    images: ['moon_split1.jpg', 'moon_split2.jpg', 'moon_split3.jpg', 'moon_split4.jpg'],
+    pdfs: [
+      { filename: 'moon_split_fulfilled1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1969-07-21 UTC17:54 / 13:54 / 1:54 PM EDT, See Quran 54:1',
+  },
+  {
+    path: '/messenger',
+    navLabel: 'Messenger of The Covenant',
+    pageTitle: 'Messenger of The Covenant',
+    bgColor: '#0a1a1a',
+    images: ['messenger1.jpg', 'messenger2.jpg', 'messenger3.jpg', 'messenger4.jpg'],
+    pdfs: [
+      { filename: 'messenger_details1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1972-01-21',
+  },
+  {
+    path: '/quran-19',
+    navLabel: "Quran's 19-Based Code",
+    pageTitle: "Quran's 19-Based Code",
+    bgColor: '#100a1a',
+    images: ['quran19based1.jpg', 'quran19based2.jpg', 'quran19based3.jpg', 'quran19based4.jpg'],
+    pdfs: [
+      { filename: 'quran19_based_details1.pdf', label: 'Signs & Proofs 1' },
+    ],
+    isFulfilled: true,
+    fulfilledDate: 'AD 1974',
+  },
+];
+
+// ============================================================
+// EMBEDDED CSS — All styles in one <style> tag
+// ============================================================
+const globalStyles = `
+  * {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  body, html, #root {
+    width: 100% !important;
+    min-height: 100vh !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+  }
+
+  .app-container {
+    min-height: 100vh !important;
+    width: 100% !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-direction: column !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 1rem !important;
+  }
+
+  /* Navigation */
+  .nav-container {
+    width: 100% !important;
+    max-width: 1200px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    gap: 0.50rem !important;
+    padding: 1rem 0 !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .nav-link {
+    display: -ms-inline-flexbox !important;
+    display: inline-flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    padding: 0.5rem 0.75rem !important;
+    border: 0.15rem solid rgba(255,255,255,0.3) !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: rgba(255,255,255,0.6) !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    font-size: 0.85rem !important;
+    transition: all 0.3s ease !important;
+    text-align: center !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+  }
+
+  .nav-link:hover {
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.6) !important;
+  }
+
+  .nav-link.active {
+    border: 0.30rem solid #eab308 !important;
+    background: transparent !important;
+    color: #ffffff !important;
+  }
+
+  /* Page Title */
+  .page-title {
+    font-size: 42px !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+    margin-bottom: 1rem !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    max-width: 1120px !important;
+  }
+
+  /* Subheading - Yellow */
+  .subheading-yellow {
+    font-size: 42px !important;
+    color: #eab308 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 1rem auto !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0 1rem !important;
+  }
+
+  /* Subheading - Blue (email) */
+  .subheading-blue {
+    font-size: 42px !important;
+    color: #3b82f6 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0 1rem !important;
+  }
+
+  @media (max-width: 1120px) {
+    .subheading-yellow,
+    .subheading-blue {
+      font-size: 32px !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .subheading-yellow,
+    .subheading-blue {
+      font-size: 24px !important;
+    }
+  }
+
+  /* UTC Timestamp */
+  .utc-timestamp {
+    font-size: 32px !important;
+    color: #eab308 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 1.5rem auto !important;
+    white-space: nowrap !important;
+    overflow-x: auto !important;
+    padding: 0 1rem !important;
+  }
+
+  @media (max-width: 1023px) and (min-width: 768px) {
+    .utc-timestamp {
+      font-size: 28px !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .utc-timestamp {
+      font-size: 20px !important;
+    }
+  }
+
+  /* Image Grid */
+  .image-grid {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .image-grid img {
+    width: 260px !important;
+    height: 185px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    border: 2px solid rgba(255,255,255,0.2) !important;
+    max-width: 100% !important;
+  }
+
+  /* Section Headings */
+  .section-heading {
+    text-align: left !important;
+    font-size: 28px !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    width: 100% !important;
+    margin: 1.5rem auto 1rem auto !important;
+    padding: 0 0.5rem !important;
+  }
+
+  /* PDF Cards */
+  .pdf-cards {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .pdf-card {
+    width: 180px !important;
+    height: 80px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: rgba(255,255,255,0.1) !important;
+    border: 2px solid rgba(255,255,255,0.3) !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    font-size: 0.9rem !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0.5rem !important;
+  }
+
+  .pdf-card:hover {
+    background: rgba(255,255,255,0.25) !important;
+    border-color: #eab308 !important;
+    transform: scale(1.05) !important;
+  }
+
+  /* Countdown Container */
+  .countdown-row {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .countdown-unit {
+    min-width: 120px !important;
+    padding: 1rem !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-direction: column !important;
+    flex-direction: column !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 12px !important;
+  }
+
+  .countdown-digit {
+    font-size: 48px !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+    line-height: 1 !important;
+  }
+
+  .countdown-label {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: rgba(255,255,255,0.7) !important;
+    margin-top: 0.5rem !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Fulfilled Container */
+  .fulfilled-container {
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    max-width: 1120px !important;
+    margin: 0 auto 2rem auto !important;
+  }
+
+  .fulfilled-box {
+    width: 340px !important;
+    height: 120px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: linear-gradient(45deg, #22c55e, #16a34a) !important;
+    border-radius: 12px !important;
+  }
+
+  .fulfilled-text {
+    font-size: 42px !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    color: #ffffff !important;
+  }
+
+  .fulfilled-check {
+    width: 110px !important;
+    height: 120px !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: linear-gradient(45deg, #22c55e, #16a34a) !important;
+    border-radius: 12px !important;
+    font-size: 48px !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+  }
+
+  /* Sound Toggle Button — Pill shape, action-oriented label */
+  .snd-btn {
+    width: 140px !important;
+    height: 50px !important;
+    border-radius: 25px !important;
+    display: -ms-inline-flexbox !important;
+    display: inline-flex !important;
+    -ms-flex-align: center !important;
+    align-items: center !important;
+    -ms-flex-pack: center !important;
+    justify-content: center !important;
+    background: rgba(255,255,255,0.15) !important;
+    border: 2px solid rgba(255,255,255,0.4) !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    font-size: 0.75rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    text-align: center !important;
+    padding: 0.25rem 0.5rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .snd-btn:hover {
+    background: rgba(255,255,255,0.25) !important;
+    border-color: #eab308 !important;
+  }
+
+  /* Fulfilled date text */
+  .fulfilled-date {
+    font-size: 24px !important;
+    color: #eab308 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-style: italic !important;
+    max-width: 1120px !important;
+    margin: 0 auto 1.5rem auto !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    padding: 0 1rem !important;
+  }
+
+  @media (max-width: 768px) {
+    .page-title {
+      font-size: 28px !important;
+    }
+    .countdown-unit {
+      min-width: 90px !important;
+      padding: 0.75rem !important;
+    }
+    .countdown-digit {
+      font-size: 32px !important;
+    }
+    .fulfilled-box {
+      width: 280px !important;
+      height: 100px !important;
+    }
+    .fulfilled-text {
+      font-size: 32px !important;
+    }
+    .fulfilled-check {
+      width: 90px !important;
+      height: 100px !important;
+      font-size: 36px !important;
+    }
+    .image-grid img {
+      width: 220px !important;
+      height: 155px !important;
+    }
+  }
+`;
+
+// ============================================================
+// COUNTDOWN COMPONENT — PURE DISPLAY, no buttons
+// ============================================================
+function Countdown({ targetDate }) {
+  const [timeLeft, setTimeLeft] = useState({ years: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculate = () => {
+      const now = new Date().getTime();
+      const target = targetDate.getTime();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setTimeLeft({ years: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+      const days = Math.floor((diff % (1000 * 60 * 60 * 24 * 365.25)) / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft({ years, days, hours, minutes, seconds });
+    };
+
+    calculate();
+    const interval = setInterval(calculate, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return (
+    <>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.years}</span>
+        <span className="countdown-label">Years</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.days}</span>
+        <span className="countdown-label">Days</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.hours}</span>
+        <span className="countdown-label">Hours</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.minutes}</span>
+        <span className="countdown-label">Minutes</span>
+      </div>
+      <div className="countdown-unit">
+        <span className="countdown-digit">{timeLeft.seconds}</span>
+        <span className="countdown-label">Seconds</span>
+      </div>
+    </>
+  );
+}
+
+// ============================================================
+// FULFILLED COMPONENT
+// ============================================================
+function Fulfilled() {
+  return (
+    <div className="fulfilled-container">
+      <div className="fulfilled-box">
+        <span className="fulfilled-text">FULFILLED</span>
+      </div>
+      <div className="fulfilled-check">
+        <span>&#10003;</span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PROPHECY PAGE COMPONENT
+// ============================================================
+function ProphecyPage({ route, soundEnabled, audioUnlocked, audioRef, onToggleSound }) {
+  // Audio playback inside interval for future prophecies
+  useEffect(() => {
+    if (route.isFulfilled) return;
+
+    const interval = setInterval(() => {
+      if (soundEnabled === true && audioUnlocked === true && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [route.isFulfilled, soundEnabled, audioUnlocked, audioRef]);
+
+  return (
+    <div>
+      <h1 className="page-title">{route.pageTitle}</h1>
+
+      {/* UTC Timestamp for future prophecies */}
+      {route.timestamp && (
+        <div className="utc-timestamp">{route.timestamp}</div>
+      )}
+
+      {/* Fulfilled date for past prophecies */}
+      {route.isFulfilled && route.fulfilledDate && (
+        <div className="fulfilled-date">{route.fulfilledDate}</div>
+      )}
+
+      {/* Countdown or Fulfilled */}
+      {!route.isFulfilled && route.targetDate ? (
+        <div className="countdown-row">
+          <Countdown targetDate={route.targetDate} />
+          {/* Sound toggle — FINAL element in countdown row, rendered EXACTLY ONCE per future prophecy page */}
+          <button className="snd-btn" onClick={onToggleSound}>
+            {soundEnabled ? 'Turn Sound OFF' : 'Turn Sound ON'}
+          </button>
+        </div>
+      ) : (
+        <>
+          <Fulfilled />
+        </>
+      )}
+
+      {/* Imagery Section */}
+      <h2 className="section-heading">Imagery</h2>
+      <div className="image-grid">
+        {route.images.map((img, idx) => (
+          <img
+            key={idx}
+            src={getAssetPath(img)}
+            alt={`${route.navLabel} image ${idx + 1}`}
+            loading="lazy"
+          />
+        ))}
+      </div>
+
+      {/* Signs & Proofs Section */}
+      <h2 className="section-heading">Signs &amp; Proofs</h2>
+      <div className="pdf-cards">
+        {route.pdfs.map((pdf, idx) => (
+          <a
+            key={idx}
+            href={getAssetPath(pdf.filename)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pdf-card"
+          >
+            {pdf.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// HOMEPAGE COMPONENT
+// ============================================================
+function HomePage() {
+  const homeRoute = routeData[0];
+
+  return (
+    <div>
+      <h1 className="page-title">{homeRoute.pageTitle}</h1>
+      <div className="subheading-yellow">Are You Ready? Time Is Running Out!</div>
+      <div className="subheading-blue">Comments? Use:: AmazingQuran19@gmail.com</div>
+
+      {/* Imagery Section */}
+      <h2 className="section-heading">Imagery</h2>
+      <div className="image-grid">
+        {homeRoute.images.map((img, idx) => (
+          <img
+            key={idx}
+            src={getAssetPath(img)}
+            alt={`Homepage image ${idx + 1}`}
+            loading="lazy"
+          />
+        ))}
+      </div>
+
+      {/* Signs & Proofs Section */}
+      <h2 className="section-heading">Signs &amp; Proofs</h2>
+      <div className="pdf-cards">
+        {homeRoute.pdfs.map((pdf, idx) => (
+          <a
+            key={idx}
+            href={getAssetPath(pdf.filename)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pdf-card"
+          >
+            {pdf.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP COMPONENT
+// ============================================================
+function AppContent() {
+  const location = useLocation();
+  const audioRef = useRef(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+
+  // Determine active route background color
+  const activeRoute = routeData.find(r => r.path === location.pathname) || routeData[0];
+  const activeRouteColor = activeRoute.bgColor;
+
+  // Audio unlock on first click (one-time)
+  useEffect(() => {
+    const handleFirstClick = () => {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => {
+          audioRef.current.pause();
+          setAudioUnlocked(true);
+        }).catch(() => {});
+      }
+      document.removeEventListener('click', handleFirstClick);
+    };
+    document.addEventListener('click', handleFirstClick);
+    return () => document.removeEventListener('click', handleFirstClick);
+  }, []);
+
+  const toggleSound = useCallback(() => {
+    setSoundEnabled(prev => !prev);
+  }, []);
+
+  return (
+    <div className="app-container" style={{ backgroundColor: activeRouteColor }}>
+      <style>{globalStyles}</style>
+
+      {/* Audio element — preload auto */}
+      <audio ref={audioRef} preload="auto" src={getAssetPath('tick_tock_sound2.mp3')} />
+
+      {/* Navigation — 8 bordered links */}
+      <nav className="nav-container">
+        {routeData.map((route) => (
+          <NavLink
+            key={route.path}
+            to={route.path}
+            end={route.path === '/'}
+            className={({ isActive }) =>
+              `nav-link${isActive ? ' active' : ''}`
+            }
+          >
+            {route.navLabel}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Routes */}
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/resurrection" element={
+          <ProphecyPage
+            route={routeData[1]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/gog-magog" element={
+          <ProphecyPage
+            route={routeData[2]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/day-of-smoke" element={
+          <ProphecyPage
+            route={routeData[3]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/computer" element={
+          <ProphecyPage
+            route={routeData[4]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/moon" element={
+          <ProphecyPage
+            route={routeData[5]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/messenger" element={
+          <ProphecyPage
+            route={routeData[6]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+        <Route path="/quran-19" element={
+          <ProphecyPage
+            route={routeData[7]}
+            soundEnabled={soundEnabled}
+            audioUnlocked={audioUnlocked}
+            audioRef={audioRef}
+            onToggleSound={toggleSound}
+          />
+        } />
+      </Routes>
+    </div>
+  );
+}
+
+// ============================================================
+// APP — Wrapped in HashRouter
+// ============================================================
+function App() {
+  return (
+    <HashRouter>
+      <AppContent />
+    </HashRouter>
+  );
+}
+
+export default App;

@@ -1,0 +1,7 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+// @ts-ignore — App has no type declarations
+import App from "./App";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
