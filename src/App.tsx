@@ -107,9 +107,9 @@ const routes: RouteData[] = [
 ];
 
 const prophecyTimestamps: Record<string, string> = {
-  '/resurrection': 'UTC Saturday 2280-11-27 01:00:00 → Thursday 2280-12-09 17:00:00',
-  '/gog-magog': 'UTC Friday 2270-12-23 14:00:00 → Wednesday 2271-01-11 14:00:00',
-  '/day-of-smoke': 'UTC Friday 2220-06-16 21:00:00 → Sunday 2221-04-08 04:00:00',
+  '/resurrection': 'UTC Saturday 2280-11-27 01:00:00 \u2192 Thursday 2280-12-09 17:00:00',
+  '/gog-magog': 'UTC Friday 2270-12-23 14:00:00 \u2192 Wednesday 2271-01-11 14:00:00',
+  '/day-of-smoke': 'UTC Friday 2220-06-16 21:00:00 \u2192 Sunday 2221-04-08 04:00:00',
 };
 
 interface TimeLeft {
@@ -309,7 +309,7 @@ function AppContent() {
           .fulfilled-check { width: 70px; height: 80px; font-size: 32px; }
         }
         @media (min-width: 768px) and (max-width: 1023px) { .utc-timestamp { font-size: 22px; } }
-        @media (min-width: 1024px) { .utc-timestamp { font-size: 26px; } }
+        @media (min-width: 1024px) { .utc-timestamp { font-size: 28px; } }
       `}</style>
       <nav className="nav-bar">
         {routes.map((r) => (
