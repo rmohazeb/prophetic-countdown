@@ -1,110 +1,145 @@
---- index.html (原始)
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
+  	<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTS8V4P1WR"></script>
+		<script>
+  	window.dataLayer = window.dataLayer || [];
+  	function gtag(){dataLayer.push(arguments);}
+  	gtag('js', new Date());
+
+  	gtag('config', 'G-KTS8V4P1WR');
+		</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>coder-app-name</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <title>Prophetic Countdown - Biblical & Quranic Prophecy Timers</title>
+    <meta name="description" content="Discover prophetic countdowns and biblical prophecies with real-time timers. Explore signs, proofs, and fulfilled predictions including Resurrection Day, Gog & Magog, Day of Smoke, Splitting of the Moon, and Quran 19 Code." />
+    <meta name="keywords" content="prophetic countdown, biblical prophecy, end times, resurrection day, gog magog, day of smoke, quran prophecy, moon splitting, messenger of covenant, quran 19 code, computer creature prophecy, islamic eschatology, prophecy timer, sacred predictions" />
+    <meta name="author" content="AmazingQuran19" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="Prophetic Countdown - Biblical & Quranic Prophecy Timers" />
+    <meta property="og:description" content="Real-time countdown timers for biblical and Quranic prophecies. Explore fulfilled and future predictions with signs and proofs." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://prophetic-countdown.netlify.app" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Prophetic Countdown - Biblical & Quranic Prophecy Timers" />
+    <meta name="twitter:description" content="Real-time countdown timers for biblical and Quranic prophecies. Explore fulfilled and future predictions." />
+    <link rel="canonical" href="https://prophetic-countdown.netlify.app" />
     <style>
-      /* 内联样式确保主题色立即生效，避免闪烁 */
-      html,
-      body {
+      html, body {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
-      }
-      html.light,
-      html.light body {
-        background-color: #ffffff !important;
-        color: #000000;
-      }
-      html.dark,
-      html.dark body {
-        background-color: #1a1a1a !important;
-        color: #ffffff;
+        background-color: #1e3a5f;
       }
     </style>
-    <script>
-      // 在 React 加载前立即设置主题，避免闪烁
-      (function () {
-        const isInIframe = window.self !== window.top;
-
-        function applyThemeToDOM(theme) {
-          document.documentElement.classList.remove("light", "dark");
-          document.documentElement.classList.add(theme);
-          document.documentElement.setAttribute("data-theme", theme);
-        }
-
-        if (isInIframe) {
-          // 监听父窗口主动推送的主题消息
-          window.addEventListener("message", function (event) {
-            if (event.data && typeof event.data.theme === "string") {
-              const theme = event.data.theme;
-              if (theme === "light" || theme === "dark") {
-                applyThemeToDOM(theme);
-              }
-            }
-          });
-        } else {
-          // 非 iframe 环境，使用默认 light 主题
-          applyThemeToDOM("light");
-        }
-      })();
-    </script>
-      <script>
-      (function () {
-        if (window.self === window.top) return;
-        var reported = {};
-        window.addEventListener("error", function (event) {
-          // 资源加载失败的 error 事件没有 message，此处仅上报 JS 运行时错误
-          if (!event || !event.message) return;
-          var key =
-            event.message + "|" + (event.filename || "") + "|" + (event.lineno || 0);
-          if (reported[key]) return; // 相同错误只上报一次，避免渲染循环刷屏
-          reported[key] = true;
-          try {
-            window.parent.postMessage(
-              {
-                type: "sandbox-runtime-error",
-                payload: {
-                  message: String(event.message).slice(0, 500),
-                  filename: event.filename || "",
-                  lineno: event.lineno || 0,
-                  colno: event.colno || 0,
-                  stack:
-                    event.error && event.error.stack
-                      ? String(event.error.stack).slice(0, 2000)
-                      : ""
-                }
-              },
-              "*"
-            );
-          } catch (e) {
-            /* 上报失败不影响页面运行 */
-          }
-        });
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
 
-
-+++ index.html (修改后)
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prophetic Countdown</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Prophetic Countdown - Biblical & Quranic Prophecy Timers</title>
+    <meta
+      name="description"
+      content="Discover prophetic countdowns and biblical prophecies with real-time timers. Explore signs, proofs, and fulfilled predictions including Resurrection Day, Gog & Magog, Day of Smoke, Splitting of the Moon, and Quran 19 Code."
+    />
+    <meta
+      name="keywords"
+      content="
+      	2280,
+      	1710
+        prophetic-countdown,
+        prophetic countdown,
+        prophecy-timer,
+        prophecy-timers,
+        sacrad-timers,
+        holy-countdown,
+        faith-timers,
+        quran-prophecy,
+        biblical-timers,
+        end-times-watch,
+        prophecy-watch,
+        prophecy-now,
+        countdown-prophecy,
+        watch-prophecy,
+        devine-countdown,
+        Are You Ready,
+        Quran The Final Testament,
+        biblical prophecy,
+        end times the Day the Hour,
+        resurrection day,
+        gog magog,
+        day of smoke,
+        quran prophecy,
+        moon splitting,
+        Apollo 11 Mission 1969,
+        Neil Alden Armestrong,
+        messenger of the covenant, 
+        Rashad Khalifa,
+        Earthquake Tectonic plates Divergent Convergent Transform,
+        The End Of The World,
+        Signs & Proofs,
+        UTC Universal Time Clock,
+        Astroid Meteors Meteoroids Meteorites,
+        quran 19 code 1974,
+        Over it is 19,
+        Silicon computer creature prophecy,
+        islamic eschatology,
+        prophecy timer,
+        sacred predictions
+      "
+    />
+    <meta
+      name="author"
+      content="AmazingQuran19"
+    />
+    <meta
+      name="robots"
+      content="index, follow"
+    />
+    <meta
+      property="og:title"
+      content="Prophetic Countdown - Biblical & Quranic Prophecy Timers"
+    />
+    <meta
+      property="og:description"
+      content="Real-time countdown timers for biblical and Quranic prophecies. Explore fulfilled and future predictions with signs and proofs."
+    />
+    <meta
+      property="og:type"
+      content="website"
+    />
+    <meta
+      property="og:url"
+      content="https://prophetic-countdown.netlify.app"
+    />
+    <meta
+      name="twitter:card"
+      content="summary_large_image"
+    />
+    <meta
+      name="twitter:title"
+      content="Prophetic Countdown - Biblical & Quranic Prophecy Timers"
+    />
+    <meta
+      name="twitter:description"
+      content="Real-time countdown timers for biblical and Quranic prophecies. Explore fulfilled and future predictions."
+    />
+    <link
+      rel="canonical"
+      href="https://prophetic-countdown.netlify.app"
+    />
     <style>
       html, body {
         margin: 0;

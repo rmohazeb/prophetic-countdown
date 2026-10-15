@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "prophecy-timers",
+    "prophecy-timers": "prophecy-timers"
+  },
+  "targets": {},
+  "etags": {}
+}
