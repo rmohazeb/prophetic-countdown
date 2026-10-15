@@ -290,7 +290,7 @@ const globalStyles = `
     }
   }
 
-  /* IMAGE GRID */
+  /* IMAGE GRID - SINGLE ROW LAYOUT */
   .section-heading {
     font-size: 28px;
     text-align: left;
@@ -303,11 +303,13 @@ const globalStyles = `
   }
 
   .image-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 280px);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: 10px;
     justify-content: center;
     margin: 0 auto;
+    max-width: 1120px;
   }
 
   .image-grid img {
@@ -316,11 +318,23 @@ const globalStyles = `
     border-radius: 8px;
     object-fit: cover;
     border: 2px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 1119px) and (min-width: 768px) {
     .image-grid {
-      grid-template-columns: 1fr;
+      flex-wrap: wrap;
+    }
+    .image-grid img {
+      width: calc(50% - 5px);
+      max-width: 280px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .image-grid {
+      flex-direction: column;
+      align-items: center;
     }
     .image-grid img {
       width: 100%;
@@ -644,30 +658,54 @@ function Homepage() {
 }
 
 // ============================================================
-// FUTURE PROPHECY PAGE (All 3 have audio)
+// FUTURE PROPHECY PAGE (All 3 have audio - iOS Compatible)
 // ============================================================
 function FutureProphecyPage({ route }: { route: RouteData }) {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(calculateTimeLeft(route.endDate!));
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
 
   const inProgress = route.startDate && route.endDate ? isInProgress(route.startDate, route.endDate) : false;
   const fulfilled = route.endDate ? isFulfilled(route.endDate) : false;
 
-  // Audio unlock on first click
+  // Play sound function using Web Audio API
+  const playSound = () => {
+    if (audioContextRef.current && audioBufferRef.current) {
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBufferRef.current;
+      source.connect(audioContextRef.current.destination);
+      source.start(0);
+    }
+  };
+
+  // Audio unlock on first click using Web Audio API (iOS compatible)
   useEffect(() => {
-    const handleClick = () => {
-      if (audioRef.current) {
-        audioRef.current.play().then(() => {
-          setAudioUnlocked(true);
-          audioRef.current!.pause();
-        }).catch(() => {});
+    const unlockAudio = async () => {
+      try {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const ctx = new AudioContextClass();
+        const response = await fetch(`${BASE}tick_tock_sound2.mp3`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        audioContextRef.current = ctx;
+        audioBufferRef.current = audioBuffer;
+        setAudioUnlocked(true);
+      } catch (error) {
+        console.error('Failed to unlock audio:', error);
       }
     };
+
+    const handleClick = () => {
+      if (!audioUnlocked) {
+        unlockAudio();
+      }
+    };
+
     document.addEventListener('click', handleClick, { once: true });
     return () => document.removeEventListener('click', handleClick);
-  }, []);
+  }, [audioUnlocked]);
 
   // Countdown interval
   useEffect(() => {
@@ -675,10 +713,9 @@ function FutureProphecyPage({ route }: { route: RouteData }) {
       const newTimeLeft = calculateTimeLeft(route.endDate!);
       setTimeLeft(newTimeLeft);
 
-      // Play sound if enabled and unlocked
-      if (soundEnabled && audioUnlocked && audioRef.current && !fulfilled) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {});
+      // Play sound if enabled and unlocked (works on iOS)
+      if (soundEnabled && audioUnlocked && !fulfilled) {
+        playSound();
       }
     }, 1000);
 
@@ -689,7 +726,6 @@ function FutureProphecyPage({ route }: { route: RouteData }) {
 
   return (
     <div className="page-content">
-      <audio ref={audioRef} src={`${BASE}tick_tock_sound2.mp3`} preload="auto" />
 
       <h1 className="page-title">{route.pageTitle}</h1>
 
